@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Estimation Fix</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 700px;
+      margin: auto;
+      background: #f5f8fb;
+    }
+    input, button {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    #output {
+      background: #fff;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 5px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+
+<h2>Price Estimation (Linear Regression)</h2>
+
+<input type="number" id="size" placeholder="Size (sqm)">
+<input type="number" id="pricePerSqm" placeholder="Price per sqm">
+<input type="number" id="historicalPrice" placeholder="Historical Price (₱)">
+<input type="number" id="currentPrice" placeholder="Current Price (₱)">
+<button onclick="estimatePrice()">Estimate</button>
+
+<div id="output"></div>
+<canvas id="priceChart" width="400" height="200"></canvas>
+
+<script>
+  function estimatePrice() {
+    // Force numbers
+    const size = Number(document.getElementById("size").value);
+    const pricePerSqm = Number(document.getElementById("pricePerSqm").value);
+    const historical = Number(document.getElementById("historicalPrice").value);
+    const current = Number(document.getElementById("currentPrice").value);
+
+    // Debug logs
+    console.log("size:", size);
+    console.log("pricePerSqm:", pricePerSqm);
+    console.log("historical:", historical);
+    console.log("current:", current);
+
+    if (isNaN(size) || isNaN(pricePerSqm) || isNaN(historical) || isNaN(current)) {
+      alert("Please fill in all fields with valid numbers.");
+      return;
+    }
+
+    const a = historical;
+    const b = (current - historical) / 12;        
+    const predicted = current + b * 12;
+    const X = 12;
+    const Y = current + b * 12; // project 1 more year into the future
+
+
+    const profit = Y - current;
+    const roi = (profit / current) * 100;
+
+    // Debug logs again
+    console.log("Predicted Price:", Y);
+    console.log("Profit:", profit);
+    console.log("ROI:", roi);
+
+    // Show raw results first (no formatting)
+    const output = document.getElementById("output");
+    output.innerHTML = `
+      <p><strong>Predicted Price:</strong> ${Y}</p>
+      <p><strong>Profit:</strong> ${profit}</p>
+      <p><strong>ROI:</strong> ${roi.toFixed(2)}%</p>
+    `;
+
+    // Chart
+    const ctx = document.getElementById("priceChart").getContext("2d");
+    const labels = ["Historical", "Current", "Predicted"];
+    const values = [historical, current, Y];
+
+    if (window.predChart) {
+      window.predChart.destroy();
+    }
+
+    window.predChart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Price Progression",
+          data: values,
+          borderColor: "#154c79",
+          fill: false,
+          tension: 0.4,
+          pointRadius: 5,
+          pointBackgroundColor: ['gray', 'blue', 'green']
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            title: {
+              display: true,
+              text: "₱ Price"
+            }
+          }
+        }
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login | Real Estate System</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 400px; margin: auto; }
+    h2 { text-align: center; }
+    input, button { width: 100%; padding: 10px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+  <h2>Real Estate Login</h2>
+  <input type="email" id="email" placeholder="Enter your email">
+  <input type="password" id="password" placeholder="Enter your password">
+  <button onclick="login()">Login</button>
+  <button onclick="register()">Register</button>
+
+  <script>
+      const firebaseConfig = {
+    apiKey: "AIzaSyD9H51GxwBdoIGr6h96lKXtA2Kr83tmqbk",
+    authDomain: "realestatesystem-7c00c.firebaseapp.com",
+    projectId: "realestatesystem-7c00c",
+    storageBucket: "realestatesystem-7c00c.firebasestorage.app",
+    messagingSenderId: "4018708365",
+    appId: "1:4018708365:web:4cdee92b50d6a5764d27c4",
+    measurementId: "G-R4PJK08YPG"
+  };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    function register() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => alert("Registration successful! You can now login."))
+        .catch(error => alert("Error: " + error.message));
+    }
+
+    function login() {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          alert("Login successful!");
+          window.location.href = "dashboard.html";
+        })
+        .catch(error => alert("Error: " + error.message));
+    }
+  </script>
+
+</body>
+</html>

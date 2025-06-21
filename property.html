@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Property Management</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f4f7fb; }
+    h2 { color: #154c79; }
+    input, select, button {
+      padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box;
+    }
+    table {
+      width: 100%; border-collapse: collapse; margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc; padding: 8px; text-align: center;
+    }
+    .tag {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: white;
+    }
+    .OnProgress { background-color: #007bff; }
+    .Signed { background-color: #28a745; }
+    .Closed { background-color: #6c757d; }
+    .action-btn { cursor: pointer; color: white; background: #154c79; border: none; padding: 5px 10px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<h2>Property Management</h2>
+
+<!-- Add Property Form -->
+<form id="propertyForm">
+  <input type="text" id="propertyName" placeholder="Property Name" required>
+  <input type="text" id="location" placeholder="Location" required>
+  <input type="number" id="size" placeholder="Size (sqm)" required>
+  <input type="number" id="price" placeholder="Current Price" required>
+  <select id="status">
+    <option value="OpenDeal">Open Deal</option>
+    <option value="NewLeads"> New Leads</option>
+    <option value="OnProgress">On-progress</option>
+    <option value="SigningContract">Signing Contract</option>
+    <option value="ClosedDeal">Closed Deal</option>
+    
+  </select>
+  <button type="submit">Add Property</button>
+</form>
+
+<!-- Property Table -->
+<table>
+  <thead>
+    <tr>
+      <th>Property</th>
+      <th>Location</th>
+      <th>Size</th>
+      <th>Price</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="propertyTableBody"></tbody>
+</table>
+
+<script>
+    let editId = null;
+  const firebaseConfig = {
+    apiKey: "AIzaSyD9H51GxwBdoIGr6h96lKXtA2Kr83tmqbk",
+    authDomain: "realestatesystem-7c00c.firebaseapp.com",
+    projectId: "realestatesystem-7c00c",
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const form = document.getElementById('propertyForm');
+  const tableBody = document.getElementById('propertyTableBody');
+
+  function renderTag(status) {
+    return `<span class="tag ${status}">${status}</span>`;
+  }
+
+  function renderTable() {
+    tableBody.innerHTML = '';
+    db.collection("properties").get().then(snapshot => {
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${data.name}</td>
+            <td>${data.location}</td>
+            <td>${data.size}</td>
+            <td>₱${data.price.toLocaleString()}</td>
+            <td>${renderTag(data.status)}</td>
+            <td>
+                <button class="action-btn" onclick="editProperty('${doc.id}')">Edit</button>
+                <button class="action-btn" onclick="deleteProperty('${doc.id}')">Delete</button>
+            </td>
+            `;
+
+        tableBody.appendChild(row);
+      });
+    });
+  }
+
+ form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const name = document.getElementById('propertyName').value;
+  const location = document.getElementById('location').value;
+  const size = parseFloat(document.getElementById('size').value);
+  const price = parseFloat(document.getElementById('price').value);
+  const status = document.getElementById('status').value;
+
+  if (editId) {
+    // UPDATE
+    db.collection("properties").doc(editId).update({ name, location, size, price, status })
+      .then(() => {
+        alert("Property updated!");
+        form.reset();
+        editId = null;
+        renderTable();
+      });
+  } else {
+    // ADD
+    db.collection("properties").add({ name, location, size, price, status })
+      .then(() => {
+        alert("Property added!");
+        form.reset();
+        renderTable();
+      });
+  }
+});
+
+function editProperty(id) {
+  db.collection("properties").doc(id).get().then(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      document.getElementById('propertyName').value = data.name;
+      document.getElementById('location').value = data.location;
+      document.getElementById('size').value = data.size;
+      document.getElementById('price').value = data.price;
+      document.getElementById('status').value = data.status;
+      editId = id;
+    }
+  });
+}
+function deleteProperty(id) {
+  if (confirm("Are you sure you want to delete this property?")) {
+    db.collection("properties").doc(id).delete()
+      .then(() => {
+        alert("Property deleted!");
+        renderTable(); // Refresh the table
+      })
+      .catch(error => {
+        alert("Error deleting property: " + error.message);
+      });
+  }
+}
+
+  renderTable(); // Load data when page loads
+</script>
+
+</body>
+</html>
